@@ -557,6 +557,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		}
 		showGraphics(false);
 		activeGraphics.clear();
+		underGraphics.clear();
 		pendingGraphics.clear();
 		dropPose();
 		releaseAfterCast = false;
@@ -4655,15 +4656,10 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 		// Re-insert into the rebuilt scene. Toggling off first is what actually
 		// re-adds it; setActive(true) on an already-"active" object does nothing.
-		if (needsReattach)
+		if (needsReattach || !object.isActive())
 		{
-			object.setActive(false);
 			needsReattach = false;
-		}
-		if (!object.isActive())
-		{
-			object.setActive(true);
-			showGraphics(true);
+			restack();
 		}
 
 		int lx = base.getX() + (int) (fineWX & 127) - 64;
@@ -5887,19 +5883,16 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 			// book and its glow, opaque to its last frame and 50 client ticks
 			// longer than the stage's own clip) stayed in the hands of a body
 			// already fading out under the fifth's, whose flash (804) has no book.
-			if (stageGraphic != null)
-			{
-				stageGraphic.setActive(false);
-				activeGraphics.remove(stageGraphic);
-			}
+			stageGraphics.forEach(this::dropGraphic);
+			stageGraphics.clear();
 			// Nor does the last stage's graphic come on late over this one's.
 			pendingGraphics.removeIf(pending -> pending.stage);
 			showSpotAnim(slavedGraphics[slavedIndex], 0, true);
 		}
 	}
 
-	/** The graphic the slaved chain's last stage put on, which the next one's replaces. */
-	private RuneLiteObject stageGraphic;
+	/** The graphic the slaved chain's last stage put on, its one or two objects, which the next one's replaces. */
+	private final java.util.List<RuneLiteObject> stageGraphics = new java.util.ArrayList<>();
 
 	/**
 	 * The player's sequence stopped. Only a cast that reached its last stage
@@ -5931,6 +5924,9 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 	/** Transient graphic objects currently showing, so despawn can clear them. */
 	private final java.util.List<RuneLiteObject> activeGraphics = new java.util.ArrayList<>();
+
+	/** Those of them drawn under the follower: the faces of a graphic on the ground. */
+	private final java.util.List<RuneLiteObject> underGraphics = new java.util.ArrayList<>();
 
 	/**
 	 * Shows a spotanim - a "graphic": teleport swirl, spell impact, the home
@@ -6099,7 +6095,64 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 				.scale(fx.resizeX(), fx.resizeY(), fx.resizeX());
 		}
 
+		// The game composites a spotanim into the actor's model and sorts the
+		// two face by face. Two RuneLiteObjects are sorted as wholes: same-tile
+		// objects draw in the order they joined the scene, the follower with no
+		// depth test, so a graphic was wholly over it - the home teleport's
+		// chalk circle drawn across the legs it rings (public QA, 27 Oct). The
+		// nearest that can be had: the faces on the ground go under the
+		// follower and the rest over it, as one object each.
+		int faces = data.getFaceCount();
+		float[] ys = data.getVerticesY();
+		int[][] corners = {data.getFaceIndices1(), data.getFaceIndices2(), data.getFaceIndices3()};
+		boolean[] ground = new boolean[faces];
+		int grounded = 0;
+		for (int i = 0; i < faces; i++)
+		{
+			ground[i] = true;
+			for (int[] corner : corners)
+			{
+				ground[i] &= ys[corner[i]] > -CIRCLE_HEIGHT_LIMIT;
+			}
+			grounded += ground[i] ? 1 : 0;
+		}
+		boolean split = grounded > 0 && grounded < faces;
+		if (grounded < faces)
+		{
+			addGraphic(pending, data, animation, frame, split ? ground : null, false);
+		}
+		if (grounded > 0)
+		{
+			addGraphic(pending, data, animation, frame, split ? ground : null, true);
+		}
+		if (object.isActive())
+		{
+			restack();
+		}
+		return true;
+	}
+
+	/**
+	 * One object of a graphic: its faces on the ground or the rest, all of
+	 * them when {@code ground} is null.
+	 */
+	private void addGraphic(PendingGraphic pending, ModelData data, Animation animation, int frame,
+		boolean[] ground, boolean under)
+	{
+		SpotAnimRepository.Entry fx = pending.fx;
 		Model lit = data.light(64 + fx.ambient(), 850 + fx.contrast(), -30, -50, -30);
+		if (ground != null)
+		{
+			// The other object's faces: -2 is the client's own mark for a face it skips.
+			int[] colours = lit.getFaceColors3();
+			for (int i = 0; i < ground.length; i++)
+			{
+				if (ground[i] != under)
+				{
+					colours[i] = -2;
+				}
+			}
+		}
 
 		RuneLiteObject graphic = client.createRuneLiteObject();
 		// Same sorted mode as the follower: in the real client a spotanim is
@@ -6117,19 +6170,38 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		{
 			controller.setFrame(frame);
 		}
-		controller.setOnFinished(finished ->
-		{
-			graphic.setActive(false);
-			activeGraphics.remove(graphic);
-		});
+		controller.setOnFinished(finished -> dropGraphic(graphic));
 		graphic.setAnimationController(controller);
 		graphic.setActive(true);
 		activeGraphics.add(graphic);
+		if (under)
+		{
+			underGraphics.add(graphic);
+		}
 		if (pending.stage)
 		{
-			stageGraphic = graphic;
+			stageGraphics.add(graphic);
 		}
-		return true;
+	}
+
+	private void dropGraphic(RuneLiteObject graphic)
+	{
+		graphic.setActive(false);
+		activeGraphics.remove(graphic);
+		underGraphics.remove(graphic);
+	}
+
+	/**
+	 * Puts the follower back in the scene between its graphics: the ones on
+	 * the ground first, so it is drawn over them, and the rest after it.
+	 */
+	private void restack()
+	{
+		showGraphics(false);
+		object.setActive(false);
+		underGraphics.forEach(graphic -> graphic.setActive(true));
+		object.setActive(true);
+		showGraphics(true);
 	}
 
 	/**
@@ -6164,6 +6236,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// follower's feet as it walks off.
 		showGraphics(false);
 		activeGraphics.clear();
+		underGraphics.clear();
 		pendingGraphics.clear();
 	}
 

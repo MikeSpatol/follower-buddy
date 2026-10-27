@@ -134,14 +134,31 @@ public class TeleportStageGraphicTest
 			});
 	}
 
-	/** A mesh whose every clone and transform is itself, and which lights to nothing. */
+	/**
+	 * One face held off the ground, so each graphic is one object, in a mesh
+	 * whose every clone and transform is itself, and which lights to nothing.
+	 */
 	private static ModelData modelData()
 	{
 		return (ModelData) Proxy.newProxyInstance(ModelData.class.getClassLoader(),
 			new Class<?>[]{ModelData.class}, (proxy, method, args) ->
 			{
-				Class<?> type = method.getReturnType();
-				return type.isInstance(proxy) ? proxy : zero(type);
+				switch (method.getName())
+				{
+					case "getFaceCount":
+						return 1;
+					case "getVerticesY":
+						return new float[]{-50, -50, -50};
+					case "getFaceIndices1":
+						return new int[]{0};
+					case "getFaceIndices2":
+						return new int[]{1};
+					case "getFaceIndices3":
+						return new int[]{2};
+					default:
+						Class<?> type = method.getReturnType();
+						return type.isInstance(proxy) ? proxy : zero(type);
+				}
 			});
 	}
 
