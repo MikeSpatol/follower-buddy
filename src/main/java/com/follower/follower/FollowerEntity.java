@@ -557,6 +557,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		}
 		showGraphics(false);
 		activeGraphics.clear();
+		pendingGraphics.clear();
 		dropPose();
 		releaseAfterCast = false;
 		clearTrail();
@@ -4741,6 +4742,9 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 
 		object.setOrientation(yaw);
 
+		// A graphic still downloading goes on the frame it lands.
+		placePendingGraphics();
+
 		// Attached graphics ride the follower on EVERY axis - fine position,
 		// height and yaw - the way the client composites an actor's spotanim
 		// into the actor's own model before drawing it at the actor's rotation.
@@ -5491,6 +5495,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// The one-shot this takes over from is as good as over for whatever
 		// was waiting on it.
 		passEmoteMilestones(true);
+		fetchGraphics(graphics);
 		playChain(animationIds, graphics, graphicHeight, 0, emoteGeneration);
 	}
 
@@ -5825,6 +5830,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		slavedChain = ids;
 		slavedGraphics = graphics;
 		slavedIndex = -1;
+		fetchGraphics(graphics);
 		advanceSlavedChain();
 	}
 
@@ -5886,7 +5892,9 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 				stageGraphic.setActive(false);
 				activeGraphics.remove(stageGraphic);
 			}
-			stageGraphic = showSpotAnim(slavedGraphics[slavedIndex], 0);
+			// Nor does the last stage's graphic come on late over this one's.
+			pendingGraphics.removeIf(pending -> pending.stage);
+			showSpotAnim(slavedGraphics[slavedIndex], 0, true);
 		}
 	}
 
@@ -5958,28 +5966,120 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 	 */
 	public void playSpotAnim(SpotAnimRepository.Entry fx, int height)
 	{
-		showSpotAnim(fx, height);
+		showSpotAnim(fx, height, false);
 	}
 
-	/** As {@link #playSpotAnim(SpotAnimRepository.Entry, int)}, and the graphic shown, or null. */
-	private RuneLiteObject showSpotAnim(SpotAnimRepository.Entry fx, int height)
+	/**
+	 * A graphic the client was still downloading when it was due. A model or
+	 * animation it has never drawn is fetched from the game's servers, and the
+	 * first ask starts the download and gets nothing: on a fresh install the
+	 * first home teleport went without its circle and book (public QA, 27 Oct).
+	 */
+	private static final class PendingGraphic
+	{
+		final SpotAnimRepository.Entry fx;
+		final int height;
+		/** The slaved chain's stage graphic, which the next stage's replaces. */
+		final boolean stage;
+		final long dueMs = System.currentTimeMillis();
+
+		PendingGraphic(SpotAnimRepository.Entry fx, int height, boolean stage)
+		{
+			this.fx = fx;
+			this.height = height;
+			this.stage = stage;
+		}
+	}
+
+	private final java.util.List<PendingGraphic> pendingGraphics = new java.util.ArrayList<>();
+
+	/**
+	 * How long a graphic still downloading is asked for, at most. One that
+	 * lands goes on at the frame it would have reached, so its own length is
+	 * what usually ends the wait.
+	 */
+	static final long GRAPHIC_WAIT_MS = 5000;
+
+	/** As {@link #playSpotAnim(SpotAnimRepository.Entry, int)}; a stage's is the chain's to replace. */
+	private void showSpotAnim(SpotAnimRepository.Entry fx, int height, boolean stage)
 	{
 		if (fx == null || object == null || lastRenderedLocation == null)
 		{
-			return null;
+			return;
 		}
+		PendingGraphic graphic = new PendingGraphic(fx, height, stage);
+		if (!placeGraphic(graphic))
+		{
+			pendingGraphics.add(graphic);
+		}
+	}
 
+	/** Puts on the graphics that have landed since they were due. Every frame. */
+	void placePendingGraphics()
+	{
+		pendingGraphics.removeIf(this::placeGraphic);
+	}
+
+	/**
+	 * Asks for a cast's graphics up front, so one the client has never drawn
+	 * downloads while the stages before it play.
+	 */
+	private void fetchGraphics(SpotAnimRepository.Entry[] graphics)
+	{
+		if (graphics == null)
+		{
+			return;
+		}
+		for (SpotAnimRepository.Entry fx : graphics)
+		{
+			if (fx != null)
+			{
+				client.loadModelData(fx.modelId());
+				client.loadAnimation(fx.animationId());
+			}
+		}
+	}
+
+	/**
+	 * The frame of {@code animation} reached this many client cycles in, or -1
+	 * once it would be over.
+	 */
+	static int frameAt(Animation animation, int cycles)
+	{
+		int[] lengths = animation.getFrameLengths();
+		if (lengths == null)
+		{
+			return 0;
+		}
+		for (int frame = 0; frame < lengths.length; frame++)
+		{
+			cycles -= lengths[frame];
+			if (cycles < 0)
+			{
+				return frame;
+			}
+		}
+		return -1;
+	}
+
+	/** Shows the graphic if its model and animation are in; true once it is done with. */
+	private boolean placeGraphic(PendingGraphic pending)
+	{
+		SpotAnimRepository.Entry fx = pending.fx;
+		int height = pending.height;
 		ModelData data = client.loadModelData(fx.modelId());
-		if (data == null)
-		{
-			return null;
-		}
-
+		// A frozen first frame with no animation to end it would linger forever.
 		Animation animation = client.loadAnimation(fx.animationId());
-		if (animation == null)
+		long late = System.currentTimeMillis() - pending.dueMs;
+		if (data == null || animation == null)
 		{
-			// A frozen first frame with no animation to end it would linger forever.
-			return null;
+			return late > GRAPHIC_WAIT_MS;
+		}
+		// In step with the cast it came with: a client cycle is 20ms.
+		int frame = frameAt(animation, (int) (late / 20));
+		if (frame < 0)
+		{
+			return true;
 		}
 
 		// The client's own pipeline order: base model (rotation, colours), then
@@ -6013,6 +6113,10 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		graphic.setOrientation(yaw);
 
 		AnimationController controller = new AnimationController(client, animation);
+		if (frame > 0)
+		{
+			controller.setFrame(frame);
+		}
 		controller.setOnFinished(finished ->
 		{
 			graphic.setActive(false);
@@ -6021,7 +6125,11 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		graphic.setAnimationController(controller);
 		graphic.setActive(true);
 		activeGraphics.add(graphic);
-		return graphic;
+		if (pending.stage)
+		{
+			stageGraphic = graphic;
+		}
+		return true;
 	}
 
 	/**
@@ -6056,6 +6164,7 @@ public class FollowerEntity implements CrossingWatch.Listener // public:cut agil
 		// follower's feet as it walks off.
 		showGraphics(false);
 		activeGraphics.clear();
+		pendingGraphics.clear();
 	}
 
 	/** Shows or hides every graphic the follower is wearing. */
