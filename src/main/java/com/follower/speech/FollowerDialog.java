@@ -529,6 +529,25 @@ public class FollowerDialog extends Overlay
 	@lombok.Setter
 	private java.util.function.Supplier<com.follower.appearance.Outfit> followerOutfit;
 
+	/**
+	 * The speaker's look, and the head models it went without because the
+	 * client was still fetching them: a model the client has never drawn
+	 * comes from the game's servers, and the first ask gets nothing. Public
+	 * QA, 27 Oct, on a fresh install: the head was missing for a whole node
+	 * and only sometimes there on the next Talk-to.
+	 */
+	private com.follower.appearance.Outfit headOutfit;
+	private final java.util.List<Integer> headDownloading = new java.util.ArrayList<>();
+
+	/**
+	 * Until when a head still missing a part is held back rather than drawn
+	 * without it, as the game draws no chathead until all of it is there; 0
+	 * once it is drawn. A part that never lands is gone without after that.
+	 */
+	private long headHeldUntil;
+
+	private static final long HEAD_WAIT_MS = 3000;
+
 	// public:end chathead
 	private String followerName = "Follower";
 	private Map<String, Node> script = new LinkedHashMap<>();
@@ -834,6 +853,8 @@ public class FollowerDialog extends Overlay
 		head = null;
 		chatheadBase = null;
 		talkAnimation = null;
+		headOutfit = null;
+		headDownloading.clear();
 		// public:cut dev
 		sweepMode = false;
 		sweep = null;
@@ -998,7 +1019,7 @@ public class FollowerDialog extends Overlay
 	public void showSweep(com.follower.appearance.Outfit outfit, int centre, int step,
 		boolean pitchAxis)
 	{
-		chatheadBase = outfit == null ? null : composer.composeChathead(outfit);
+		chatheadBase = outfit == null ? null : composer.composeChathead(outfit, null);
 		net.runelite.api.Model crop = follower.getBaseModel();
 
 		sweep = new BufferedImage[SWEEP_COUNT];
@@ -1182,15 +1203,53 @@ public class FollowerDialog extends Overlay
 				cropModel = follower.getBaseModel();
 			}
 
+			headOutfit = outfit;
+			headDownloading.clear();
+			headHeldUntil = System.currentTimeMillis() + HEAD_WAIT_MS;
 			if (outfit != null)
 			{
-				chatheadBase = composer.composeChathead(outfit);
+				composeHead();
 			}
-			if (chatheadBase == null)
+			// Not while a part is on its way: the head comes when it lands.
+			if (chatheadBase == null && headDownloading.isEmpty())
 			{
 				head = renderHead(cropModel, null, headFraction);
 			}
 		});
+	}
+
+	/**
+	 * Composes the speaker's head, holding it back while a part is still
+	 * downloading. The render asks again as the parts land, so the head is
+	 * there the frame the last one does, on the node it was missing from.
+	 */
+	private void composeHead()
+	{
+		headDownloading.clear();
+		net.runelite.api.Model built = composer.composeChathead(headOutfit, headDownloading);
+		if (headDownloading.isEmpty() || System.currentTimeMillis() >= headHeldUntil)
+		{
+			headHeldUntil = 0;
+			chatheadBase = built;
+		}
+	}
+
+	/**
+	 * Asks for both heads' models without drawing them, so a part the client
+	 * has never drawn is on its way before the box needs it: the follower's
+	 * and the player's look as they are now. Client thread only.
+	 */
+	public void fetchHeads()
+	{
+		if (followerOutfit != null)
+		{
+			composer.composeChathead(followerOutfit.get(), null);
+		}
+		Player local = client.getLocalPlayer();
+		if (local != null && local.getPlayerComposition() != null)
+		{
+			composer.composeChathead(com.follower.appearance.Outfit.from(local.getPlayerComposition()), null);
+		}
 	}
 
 	/** Starts the talking face again from its first frame. */
@@ -1217,6 +1276,14 @@ public class FollowerDialog extends Overlay
 	 */
 	private BufferedImage animatedHead(int lines)
 	{
+		// A part landed, or the wait for one is over: the head again, whole or
+		// as near as it gets. Nothing is asked once every part is there.
+		if (!headDownloading.isEmpty() && (composer.anyArrived(headDownloading)
+			|| headHeldUntil != 0 && System.currentTimeMillis() >= headHeldUntil))
+		{
+			composeHead();
+			restartTalk();
+		}
 		if (chatheadBase == null)
 		{
 			return head;

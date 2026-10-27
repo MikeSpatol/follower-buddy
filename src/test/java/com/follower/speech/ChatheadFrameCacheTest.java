@@ -91,7 +91,7 @@ public class ChatheadFrameCacheTest
 	}
 
 	/** A small head-sized ball of faces. */
-	private static Model head()
+	static Model head()
 	{
 		int rings = 6;
 		int segs = 8;

@@ -5631,6 +5631,9 @@ public class FollowerPlugin extends Plugin
 				return;
 			}
 			buildFailureTold = false;
+			// The dialogue heads are asked for with each look, so a model the
+			// client has never drawn has landed by the first Talk-to.
+			dialog.fetchHeads(); // public:cut chathead
 
 			// Stances follow the weapon the FOLLOWER holds, not the one we hold.
 			follower.setWeapon(outfit.isItem(KitType.WEAPON)
@@ -7421,6 +7424,8 @@ public class FollowerPlugin extends Plugin
 		// A bubble still up when the box opens is two mouths at once; the
 		// queue is likewise held while the box is open (see drainSpeechQueue).
 		overlay.clear();
+		// And again a tick before the box draws them, for a look changed since.
+		dialog.fetchHeads(); // public:cut chathead
 		String asked = context().getAskedTree();
 		com.follower.speech.DialogTree tree = dialogLoader.get(asked);
 		if (tree != null)

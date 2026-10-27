@@ -267,10 +267,13 @@ public class AppearanceComposer
 	 * palette as the body and lit the same way. These models carry the skeletons
 	 * that talk animations are authored for, which the body model does not.
 	 *
+	 * <p>Notes in {@code downloading}, as {@link #compose(Outfit, List)} does,
+	 * each head model it went without because the client is still fetching it.
+	 *
 	 * @return the lit chathead, or null when the dump has no head data for this
 	 * outfit (caller should fall back to cropping the body model)
 	 */
-	public Model composeChathead(Outfit outfit)
+	public Model composeChathead(Outfit outfit, List<Integer> downloading)
 	{
 		if (!repository.isLoaded() || outfit == null)
 		{
@@ -285,13 +288,13 @@ public class AppearanceComposer
 		// dialogue head too; a med helm hides hair but keeps the beard.
 		if (resolved.isItem(KitType.HEAD))
 		{
-			addHeadPart(parts, repository.item(resolved.itemId(KitType.HEAD)), resolved.getGender());
+			addHeadPart(parts, repository.item(resolved.itemId(KitType.HEAD)), resolved.getGender(), downloading);
 		}
 		for (KitType slot : new KitType[]{KitType.HAIR, KitType.JAW})
 		{
 			if (!hidden.contains(slot) && resolved.isKit(slot))
 			{
-				addHeadPart(parts, repository.kit(resolved.kitId(slot)), resolved.getGender());
+				addHeadPart(parts, repository.kit(resolved.kitId(slot)), resolved.getGender(), downloading);
 			}
 		}
 
@@ -299,7 +302,8 @@ public class AppearanceComposer
 	}
 
 	/** Loads an entry's dialogue-head models with its authored recolours applied. */
-	private void addHeadPart(List<ModelData> parts, ModelRepository.Entry entry, int gender)
+	private void addHeadPart(List<ModelData> parts, ModelRepository.Entry entry, int gender,
+		List<Integer> downloading)
 	{
 		int[] modelIds = entry == null ? null : entry.headModels(gender);
 		if (modelIds == null)
@@ -313,6 +317,10 @@ public class AppearanceComposer
 			if (data != null)
 			{
 				parts.add(entry.recolour(data));
+			}
+			else if (modelId >= 0 && downloading != null)
+			{
+				downloading.add(modelId);
 			}
 		}
 	}
