@@ -323,6 +323,7 @@ public class FollowerPlugin extends Plugin
 	private java.util.concurrent.ScheduledExecutorService executor;
 
 	// public:end sharevoice
+	// public:cut worker
 	/**
 	 * The plugin's own worker for its slow work off the client and event
 	 * threads: reading and writing packs, and drawing sketches. RuneLite's
@@ -331,6 +332,7 @@ public class FollowerPlugin extends Plugin
 	 * among them (qa5 #68). Made in startUp, stopped in shutDown.
 	 */
 	private java.util.concurrent.ExecutorService worker;
+	// public:end worker
 
 	@Inject
 	private com.follower.follower.StanceLibrary stanceLibrary;
@@ -668,6 +670,7 @@ public class FollowerPlugin extends Plugin
 		// them without a null check. What this method or shutDown can reach
 		// keeps its checks: shutDown also runs when startUp throws part-way.
 
+		// public:cut worker
 		// One thread; work handed it once stopped (a sketch's frame arriving
 		// after shutDown) is dropped, not thrown into the caller.
 		worker = new java.util.concurrent.ThreadPoolExecutor(1, 1, 0, java.util.concurrent.TimeUnit.MILLISECONDS,
@@ -677,6 +680,7 @@ public class FollowerPlugin extends Plugin
 				thread.setDaemon(true);
 				return thread;
 			}, new java.util.concurrent.ThreadPoolExecutor.DiscardPolicy());
+		// public:end worker
 		dataDir = RuneLite.RUNELITE_DIR.toPath().resolve(DATA_DIR_NAME);
 		try
 		{
@@ -1235,7 +1239,7 @@ public class FollowerPlugin extends Plugin
 		voices.close();
 		// A pack being written is let finish, not cut off half-way.
 		// public:end sharevoice
-		worker.shutdown();
+		worker.shutdown(); // public:cut worker
 
 		if (navButton != null)
 		{

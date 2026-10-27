@@ -796,7 +796,7 @@ public class LifecycleGlueTest
 		assertTrue(source.contains("worker.execute(() -> importPack(source, parent));"));
 		// public:end sharevoice
 		assertTrue(source.contains("sketchBook, drawManager, worker,")); // public:cut chronicle
-		assertTrue(method("protected void startUp() throws Exception").contains("worker = new "));
-		assertTrue(method("protected void shutDown() throws Exception").contains("worker.shutdown();"));
+		assertTrue(method("protected void startUp() throws Exception").contains("worker = new ")); // public:cut worker
+		assertTrue(method("protected void shutDown() throws Exception").contains("worker.shutdown();")); // public:cut worker
 	}
 }

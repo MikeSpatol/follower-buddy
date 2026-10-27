@@ -17,7 +17,8 @@
     "souvenirs-wishes",
     "likes",
     "nicknames",
-    "long-descriptions"
+    "long-descriptions",
+    "worker"
   ],
   "budget": 190000,
   "exclude": [
@@ -79,7 +80,8 @@
     "spectate-keep-fight-lines": "the spectator, keeping the fight start and end lines",
     "spectate-shield": "the spectator's shield only",
     "thrall-outfits": "per-style thrall outfits",
-    "will": "the Wilderness-ditch and strong-monster stops, stepping aside"
+    "will": "the Wilderness-ditch and strong-monster stops, stepping aside",
+    "worker": "the plugin's own worker thread, which only share packs and sketches use"
   },
   "requires": {
     "devdump": [
@@ -88,6 +90,10 @@
     "devfonts": [
       "dev",
       "posing"
+    ],
+    "worker": [
+      "chronicle",
+      "sharevoice"
     ]
   },
   "resources": {
