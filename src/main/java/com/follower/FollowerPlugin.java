@@ -9574,7 +9574,7 @@ public class FollowerPlugin extends Plugin
 	private int channelSettleTicks;
 
 	@Subscribe
-	public void onFriendsChatChanged(net.runelite.api.events.FriendsChatChanged event)
+	public void onFriendsChatSync(net.runelite.api.events.FriendsChatSync event)
 	{
 		channelSettleTicks = 5;
 	}
