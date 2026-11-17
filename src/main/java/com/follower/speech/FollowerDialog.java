@@ -440,8 +440,8 @@ public class FollowerDialog extends Overlay
 	private final net.runelite.client.callback.ClientThread clientThread;
 	// public:cut chathead
 	private final com.follower.appearance.AppearanceComposer composer;
-	private final net.runelite.client.input.KeyManager keyManager; // public:cut dev
 	// public:end chathead
+	private final net.runelite.client.input.KeyManager keyManager;
 	private final com.follower.ui.GameFontRepository gameFonts;
 
 	// public:cut chathead
@@ -754,23 +754,117 @@ public class FollowerDialog extends Overlay
 				{
 					if (optionBounds[i] != null && optionBounds[i].contains(event.getPoint()))
 					{
-						String target = node.optionNext[i];
-						pendingOptionIndex = i;
-						pendingAction = () -> goTo(target);
+						queueOption(i);
 						break;
 					}
 				}
 			}
 			else
 			{
-				awaitingContinue = true;
-				pendingAction = FollowerDialog.this::advance;
+				queueContinue();
 			}
 
 			event.consume();
 			return event;
 		}
 	};
+
+	/**
+	 * Space continues and the number keys pick an option, as in the game's own
+	 * dialogues (issue #3). Not while something is typed in the chatbox under
+	 * the box: a message being written keeps its spaces and digits. A key that
+	 * arrives while an input is in flight is swallowed, as a click is.
+	 */
+	private final net.runelite.client.input.KeyListener dialogKeys = new net.runelite.client.input.KeyListener()
+	{
+		/** Whether the key just pressed was ours, so the character it types is too. */
+		private boolean swallowTyped;
+
+		@Override
+		public void keyTyped(java.awt.event.KeyEvent e)
+		{
+			if (swallowTyped)
+			{
+				swallowTyped = false;
+				e.consume();
+			}
+		}
+
+		@Override
+		public void keyReleased(java.awt.event.KeyEvent e)
+		{
+		}
+
+		@Override
+		public void keyPressed(java.awt.event.KeyEvent e)
+		{
+			swallowTyped = false;
+			if (pageShown() < 0 || !chatInputEmpty())
+			{
+				return;
+			}
+			if (optionsVisible())
+			{
+				int option = optionKey(e.getKeyCode());
+				if (option < 0 || option >= node.optionText.length)
+				{
+					return;
+				}
+				if (pendingAction == null)
+				{
+					queueOption(option);
+				}
+			}
+			else if (e.getKeyCode() == java.awt.event.KeyEvent.VK_SPACE)
+			{
+				if (pendingAction == null)
+				{
+					queueContinue();
+				}
+			}
+			else
+			{
+				return;
+			}
+			swallowTyped = true;
+			e.consume();
+		}
+	};
+
+	/** The option a number key picks, 0 for the first, or -1 for any other key. */
+	private static int optionKey(int keyCode)
+	{
+		if (keyCode >= java.awt.event.KeyEvent.VK_1 && keyCode <= java.awt.event.KeyEvent.VK_9)
+		{
+			return keyCode - java.awt.event.KeyEvent.VK_1;
+		}
+		if (keyCode >= java.awt.event.KeyEvent.VK_NUMPAD1 && keyCode <= java.awt.event.KeyEvent.VK_NUMPAD9)
+		{
+			return keyCode - java.awt.event.KeyEvent.VK_NUMPAD1;
+		}
+		return -1;
+	}
+
+	private boolean chatInputEmpty()
+	{
+		String typed = client.getVarcStrValue(net.runelite.api.gameval.VarClientID.CHATINPUT);
+		return typed == null || typed.isEmpty();
+	}
+
+	/** Continues on the next tick, as a click on "Click here to continue" does. */
+	private void queueContinue()
+	{
+		awaitingContinue = true;
+		pendingAction = this::advance;
+	}
+
+	/** Takes option {@code i} on the next tick, as a click on its row does. */
+	private void queueOption(int i)
+	{
+		String target = node.optionNext[i];
+		pendingOptionIndex = i;
+		pendingAction = () -> goTo(target);
+	}
 
 	@Inject
 	public FollowerDialog(Client client, FollowerEntity follower,
@@ -787,8 +881,8 @@ public class FollowerDialog extends Overlay
 		this.clientThread = clientThread;
 		// public:cut chathead
 		this.composer = composer;
-		this.keyManager = keyManager; // public:cut dev
 		// public:end chathead
+		this.keyManager = keyManager;
 		this.gameFonts = gameFonts;
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
@@ -797,12 +891,14 @@ public class FollowerDialog extends Overlay
 	public void register()
 	{
 		mouseManager.registerMouseListener(clickAdapter);
+		keyManager.registerKeyListener(dialogKeys);
 		keyManager.registerKeyListener(keyAdapter); // public:cut chathead,dev
 	}
 
 	public void unregister()
 	{
 		mouseManager.unregisterMouseListener(clickAdapter);
+		keyManager.unregisterKeyListener(dialogKeys);
 		keyManager.unregisterKeyListener(keyAdapter); // public:cut chathead,dev
 	}
 
@@ -843,6 +939,20 @@ public class FollowerDialog extends Overlay
 	void reachForTest(String nodeId)
 	{
 		latch(script.get(nodeId));
+	}
+
+	/** Shows a node's first page, as goTo does without the facing and the chathead. */
+	void showForTest(String nodeId)
+	{
+		node = script.get(nodeId);
+		pages = node.pages;
+		page = 0;
+	}
+
+	/** The option whose tick is in flight, or -1. */
+	int optionInFlightForTest()
+	{
+		return pendingAction == null ? -1 : pendingOptionIndex;
 	}
 
 	public void close()

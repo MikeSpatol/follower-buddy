@@ -41,7 +41,8 @@ to the game, and it never acts for you.
   levels, writes up your best drops, spots marks of grace on rooftop courses,
   and now and then goes off on an errand of its own.
 - **Talk-to** opens a proper dialog box: ask how today went, or answer
-  something it asked you.
+  something it asked you. Space continues and the number keys pick an option,
+  as in the game.
 <!-- public:end chronicle,likes,nicknames,souvenirs-wishes,side-games,marks -->
 <!-- public:else - **Talks** about what's happening: bosses, levels, drops, deaths, quests, the -->
 <!-- public:else   places you visit and the gear you wear. Around 2,500 lines, overhead or in the -->
@@ -52,7 +53,8 @@ to the game, and it never acts for you.
 <!-- public:else   levels, writes up your best drops, and now and then goes off on an errand of -->
 <!-- public:else   its own. -->
 <!-- public:else - **Talk-to** opens a proper dialog box: ask how today went, or answer -->
-<!-- public:else   something it asked you. -->
+<!-- public:else   something it asked you. Space continues and the number keys pick an option, -->
+<!-- public:else   as in the game. -->
 
 ## Getting started
 
