@@ -799,7 +799,8 @@ public class FollowerDialog extends Overlay
 		public void keyPressed(java.awt.event.KeyEvent e)
 		{
 			swallowTyped = false;
-			if (pageShown() < 0 || !chatInputEmpty())
+			if (!open || sweepMode || node == null || !chatInputEmpty()) // public:cut chathead,dev
+			// public:else if (!open || node == null || !chatInputEmpty())
 			{
 				return;
 			}
@@ -947,6 +948,11 @@ public class FollowerDialog extends Overlay
 		node = script.get(nodeId);
 		pages = node.pages;
 		page = 0;
+	}
+
+	int pageForTest()
+	{
+		return page;
 	}
 
 	/** The option whose tick is in flight, or -1. */

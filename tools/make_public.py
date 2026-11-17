@@ -848,7 +848,9 @@ WILDCARD_CLASH = {
     'Skill', 'Item', 'Tile', 'Node', 'Constants', 'Config', 'Overlay', 'Layer', 'Objects',
     'Action', 'Border', 'Box', 'Icon', 'Option', 'Optional', 'Executor', 'Callable', 'Future',
     'Function', 'Supplier', 'Consumer', 'Predicate', 'Collectors', 'Stream', 'Random', 'Logger',
-    'Name', 'Deque', 'Text', 'Document', 'Element', 'Attribute', 'Kind', 'Mode', 'State', 'Status'}
+    'Name', 'Deque', 'Text', 'Document', 'Element', 'Attribute', 'Kind', 'Mode', 'State', 'Status',
+    # java.awt.event and net.runelite.client.input both declare these.
+    'KeyListener', 'MouseListener', 'MouseAdapter', 'MouseWheelListener'}
 
 
 def project_types(out, top=MAIN):

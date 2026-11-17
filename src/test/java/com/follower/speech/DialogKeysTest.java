@@ -59,12 +59,12 @@ public class DialogKeysTest
 	{
 		dialog.showForTest("talk");
 		assertTrue(press(KeyEvent.VK_SPACE, ' '));
-		assertEquals("not before the tick", 0, dialog.pageShown());
+		assertEquals("not before the tick", 0, dialog.pageForTest());
 		dialog.tick();
-		assertEquals(1, dialog.pageShown());
+		assertEquals(1, dialog.pageForTest());
 		assertFalse("any other key is the game's", press(KeyEvent.VK_A, 'a'));
 		dialog.tick();
-		assertEquals(1, dialog.pageShown());
+		assertEquals(1, dialog.pageForTest());
 	}
 
 	@Test
@@ -74,7 +74,7 @@ public class DialogKeysTest
 		press(KeyEvent.VK_SPACE, ' ');
 		assertTrue(press(KeyEvent.VK_SPACE, ' '));
 		dialog.tick();
-		assertEquals("one page per tick, as with clicks", 1, dialog.pageShown());
+		assertEquals("one page per tick, as with clicks", 1, dialog.pageForTest());
 	}
 
 	@Test
@@ -105,7 +105,7 @@ public class DialogKeysTest
 		dialog.showForTest("talk");
 		assertFalse(press(KeyEvent.VK_SPACE, ' '));
 		dialog.tick();
-		assertEquals(0, dialog.pageShown());
+		assertEquals(0, dialog.pageForTest());
 		dialog.showForTest("menu");
 		assertFalse(press(KeyEvent.VK_1, '1'));
 		assertEquals(-1, dialog.optionInFlightForTest());
