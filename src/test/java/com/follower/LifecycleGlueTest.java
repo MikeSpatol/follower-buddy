@@ -687,6 +687,12 @@ public class LifecycleGlueTest
 		assertTrue("a shift-click must open the box on the client thread", over >= 0
 			&& adapter.indexOf("startTalking();", over) > over);
 		assertFalse("and only there", adapter.substring(0, over).contains("startTalking("));
+		// Issue #4, Nov 2026: RuneLite asserts the client thread in the
+		// follower's isActive; asking it from here threw and ate every
+		// shift-click, so drop and the bank's shift ops went dead.
+		String before = adapter.substring(0, over);
+		assertFalse("the Swing side asks the client and the follower nothing",
+			java.util.regex.Pattern.compile("(?<![\\w.])(client|follower)\\.").matcher(before).find());
 		// Asked again there: the box opens on the next tick, so a second
 		// click queued before it would otherwise start the talk over.
 		String there = adapter.substring(over);

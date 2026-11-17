@@ -109,7 +109,8 @@ public class MenuOverTheSceneTest
 				unguarded.add(member.substring(Math.max(0, member.lastIndexOf("\n\t", at) - 200), at).trim());
 			}
 		}
-		assertTrue("no look under the mouse found at all - the lint has lost its place", found >= 4);
+		// Three since issue #4: the shift-click adapter reads the client tick's guarded answer.
+		assertTrue("no look under the mouse found at all - the lint has lost its place", found >= 3);
 		assertTrue("the follower under the mouse is not the follower clicked while an interface"
 			+ " covers it:\n" + String.join("\n---\n", unguarded), unguarded.isEmpty());
 	}

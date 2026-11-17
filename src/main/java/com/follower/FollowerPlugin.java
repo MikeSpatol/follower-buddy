@@ -240,6 +240,12 @@ public class FollowerPlugin extends Plugin
 	 * Talk-to - like clicking a real NPC. Intercepted directly rather than
 	 * trusting the injected menu entry to be present on the click's exact
 	 * frame. The click is consumed so it doesn't also walk.
+	 *
+	 * Heard on the Swing thread, so it asks the client nothing: whether the
+	 * follower is under the mouse is the client tick's answer. Issue #4, Nov
+	 * 2026: RuneLite began asserting the client thread in the follower's
+	 * isActive, every shift-click threw here, and the game never saw it, so
+	 * shift-click drop and the bank's shift ops went dead.
 	 */
 	private final net.runelite.client.input.MouseAdapter shiftClickAdapter =
 		new net.runelite.client.input.MouseAdapter()
@@ -248,12 +254,9 @@ public class FollowerPlugin extends Plugin
 		public java.awt.event.MouseEvent mousePressed(java.awt.event.MouseEvent event)
 		{
 			if (!javax.swing.SwingUtilities.isLeftMouseButton(event)
-				|| !client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)
-				|| client.isMenuOpen()
-				|| dialog.isOpen()
-				|| !follower.isSpawned()
-				|| !follower.isUnderMouse(new net.runelite.api.Point(event.getX(), event.getY()))
-				|| !offersWalkHere(client.getMenu().getMenuEntries()))
+				|| !event.isShiftDown()
+				|| !overFollower
+				|| dialog.isOpen())
 			{
 				return event;
 			}
@@ -1397,6 +1400,7 @@ public class FollowerPlugin extends Plugin
 		damagedByPlayer.clear();
 		mirrorGraphicsUntilTick = -1;
 		hoveredThisTick = false;
+		overFollower = false;
 		hoverTicks = 0;
 		hopped = false;
 		// public:cut company-extras
@@ -3287,6 +3291,9 @@ public class FollowerPlugin extends Plugin
 
 	/** Set by the client tick when the mouse is over the follower; read once a game tick. */
 	private boolean hoveredThisTick;
+
+	/** The last client tick's hover, for the shift-click adapter on the Swing thread. */
+	private volatile boolean overFollower;
 
 	/** Consecutive game ticks the mouse has rested on the follower. */
 	private int hoverTicks;
@@ -7917,6 +7924,7 @@ public class FollowerPlugin extends Plugin
 		// here to draw the hover hint, so knowing the mouse is resting on the
 		// follower costs nothing beyond this line.
 		hoveredThisTick |= over;
+		overFollower = over;
 
 		// Over a booth, a tree or an NPC the left-click is theirs: the entry
 		// goes on top of the menu, and the follower walks at the heel, so it
