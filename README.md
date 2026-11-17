@@ -73,7 +73,7 @@ The full guide to the panel, the settings and the commands is in
   left-click stays theirs.
 - Speech is a data-driven rule engine (`src/main/resources/com/follower/`). A
   full pass over every rule takes about 0.1 ms.
-- 1,836 tests cover the rule engine, movement and every bundled rule; see
+- 1,837 tests cover the rule engine, movement and every bundled rule; see
   `docs/testing-strategy.md`.
 
 ## More

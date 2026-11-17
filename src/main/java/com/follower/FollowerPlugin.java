@@ -164,6 +164,12 @@ public class FollowerPlugin extends Plugin
 	 * Talk-to - like clicking a real NPC. Intercepted directly rather than
 	 * trusting the injected menu entry to be present on the click's exact
 	 * frame. The click is consumed so it doesn't also walk.
+	 *
+	 * Heard on the Swing thread, so it asks the client nothing: whether the
+	 * follower is under the mouse is the client tick's answer. Issue #4, Nov
+	 * 2026: RuneLite began asserting the client thread in the follower's
+	 * isActive, every shift-click threw here, and the game never saw it, so
+	 * shift-click drop and the bank's shift ops went dead.
 	 */
 	final MouseAdapter shiftClickAdapter =
 		new MouseAdapter()
@@ -172,12 +178,9 @@ public class FollowerPlugin extends Plugin
 		public MouseEvent mousePressed(MouseEvent event)
 		{
 			if (!SwingUtilities.isLeftMouseButton(event)
-				|| !client.isKeyPressed(KeyCode.KC_SHIFT)
-				|| client.isMenuOpen()
-				|| dialog.isOpen()
-				|| !follower.isSpawned()
-				|| !follower.isUnderMouse(new Point(event.getX(), event.getY()))
-				|| !offersWalkHere(client.getMenu().getMenuEntries()))
+				|| !event.isShiftDown()
+				|| !overFollower
+				|| dialog.isOpen())
 				return event;
 
 			crossPoint = event.getPoint();
@@ -791,6 +794,7 @@ public class FollowerPlugin extends Plugin
 		damagedByPlayer.clear();
 		mirrorGraphicsUntilTick = -1;
 		hoveredThisTick = false;
+		overFollower = false;
 		hoverTicks = 0;
 		hopped = false;
 		if (gaze != null)
@@ -2199,6 +2203,9 @@ public class FollowerPlugin extends Plugin
 
 	/** Set by the client tick when the mouse is over the follower; read once a game tick. */
 	boolean hoveredThisTick;
+
+	/** The last client tick's hover, for the shift-click adapter on the Swing thread. */
+	volatile boolean overFollower;
 
 	/** Consecutive game ticks the mouse has rested on the follower. */
 	int hoverTicks;
@@ -4753,6 +4760,7 @@ public class FollowerPlugin extends Plugin
 		// here to draw the hover hint, so knowing the mouse is resting on the
 		// follower costs nothing beyond this line.
 		hoveredThisTick |= over;
+		overFollower = over;
 
 		// Over a booth, a tree or an NPC the left-click is theirs: the entry
 		// goes on top of the menu, and the follower walks at the heel, so it

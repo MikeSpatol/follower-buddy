@@ -512,6 +512,7 @@ class FollowerEntity implements CrossingWatch.Listener
 		activeGraphics.clear();
 		underGraphics.clear();
 		pendingGraphics.clear();
+		afterObjectLoop.clear();
 		dropPose();
 		releaseAfterCast = false;
 		clearTrail();
@@ -2573,6 +2574,7 @@ class FollowerEntity implements CrossingWatch.Listener
 	/** Per-frame update: follow, move, orient, animate, position. */
 	void updateFrame()
 	{
+		runAfterObjectLoop();
 		if (!spawned || object == null)
 			return;
 
@@ -4437,7 +4439,15 @@ class FollowerEntity implements CrossingWatch.Listener
 		int firstFrame = firstFrameOf(ids[index]);
 		if (firstFrame > 0)
 			controller.setFrame(firstFrame);
-		controller.setOnFinished(finished -> playChain(ids, graphics, graphicHeight, index + 1, generation));
+		// The next clip waits for the frame's update, and this one holds its
+		// last frame until then: let run out, it would be drawn unposed.
+		controller.setOnFinished(finished ->
+		{
+			int last = animation.isMayaAnim() ? animation.getDuration() - 1 : max(0, frameCount(animation) - 1);
+			finished.setOnFinished(held -> held.setFrame(last));
+			finished.setFrame(last);
+			afterObjectLoop.add(() -> playChain(ids, graphics, graphicHeight, index + 1, generation));
+		});
 		object.setAnimationController(controller);
 		puttingAway = ids[index] == WRITE_PUT_AWAY;
 		setEmotePlaying(true);
@@ -4611,6 +4621,27 @@ class FollowerEntity implements CrossingWatch.Listener
 
 	/** Bumped to orphan an in-flight emote chain. */
 	int emoteGeneration;
+
+	/**
+	 * Work a finished clip handed on, run at the next frame's update. A clip
+	 * finishes inside the client's own walk over every RuneLiteObject, and
+	 * that walk has already stepped to the next one: take that one out of
+	 * the scene, even to put it straight back as {@link #restack()} does,
+	 * and the client is left holding a dead link and crashes. Issue #5, Nov
+	 * 2026: the shield's channel and a thrall summon chain clips that carry
+	 * graphics, and the next clip's graphic restacked from in there. Only
+	 * the finished object may leave from inside, as a spent graphic does.
+	 */
+	final List<Runnable> afterObjectLoop = new ArrayList<>();
+
+	void runAfterObjectLoop()
+	{
+		if (afterObjectLoop.isEmpty())
+			return;
+		List<Runnable> due = new ArrayList<>(afterObjectLoop);
+		afterObjectLoop.clear();
+		due.forEach(Runnable::run);
+	}
 
 	// ---- teleport vanish: disappear with the cast, reappear at the landing ----
 
