@@ -1,10 +1,15 @@
 package com.follower.appearance;
 
+import com.google.gson.Gson;
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Proxy;
+import net.runelite.api.Client;
+import net.runelite.api.IndexDataBase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -350,5 +355,31 @@ public class LiveCacheParserTest
 		assertArrayEquals(new short[]{22}, entry.cr);
 		assertArrayEquals(new short[]{33}, entry.tf);
 		assertArrayEquals(new short[]{44}, entry.tr);
+	}
+
+	/**
+	 * Nov 2026, a fresh RuneLite home: the config archive was still being
+	 * fetched at login, getFileIds threw from inside ensureCatalogues and
+	 * the client logged "Exception in invoke". An archive not there yet
+	 * reads as empty and the catalogue stays unread, to be asked for again.
+	 */
+	@Test
+	public void anArchiveStillDownloadingReadsAsEmptyAndIsAskedForAgain()
+	{
+		IndexDataBase fetching = (IndexDataBase) Proxy.newProxyInstance(IndexDataBase.class.getClassLoader(),
+			new Class<?>[]{IndexDataBase.class}, (proxy, method, args) ->
+			{
+				throw new IllegalStateException("archive not loaded");
+			});
+		Client client = (Client) Proxy.newProxyInstance(Client.class.getClassLoader(),
+			new Class<?>[]{Client.class},
+			(proxy, method, args) -> "getIndexConfig".equals(method.getName()) ? fetching : null);
+
+		assertTrue(LiveCacheParser.parseItems(client).isEmpty());
+		assertTrue(LiveCacheParser.parseKits(client, null).isEmpty());
+		assertTrue(LiveCacheParser.parseSpotAnims(client).isEmpty());
+		ModelRepository repository = new ModelRepository(new Gson());
+		repository.loadFromClient(client);
+		assertFalse("read, so it would never be asked for again", repository.hasReadTheLiveCache());
 	}
 }

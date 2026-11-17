@@ -101,7 +101,7 @@ public final class LiveCacheParser
 		{
 			return ids;
 		}
-		for (int id : configs.getFileIds(CONFIG_SEQUENCE))
+		for (int id : fileIds(configs, CONFIG_SEQUENCE))
 		{
 			ids.add(id);
 		}
@@ -164,7 +164,7 @@ public final class LiveCacheParser
 			return entries;
 		}
 		int failures = 0;
-		for (int id : configs.getFileIds(archive))
+		for (int id : fileIds(configs, archive))
 		{
 			byte[] data = configs.loadData(archive, id);
 			if (data == null)
@@ -192,6 +192,25 @@ public final class LiveCacheParser
 			log.warn("{} {} definitions failed to parse", failures, counted);
 		}
 		return entries;
+	}
+
+	/**
+	 * The ids in one config archive, or none while the client is still
+	 * fetching it. On a first run the archive arrives after the login screen
+	 * and asking for it before then throws (Nov 2026, a fresh RuneLite home:
+	 * "Exception in invoke" from ensureCatalogues). Finding nothing leaves the
+	 * catalogue unread, so the next login-adjacent call asks again.
+	 */
+	static int[] fileIds(IndexDataBase configs, int archive)
+	{
+		try
+		{
+			return configs.getFileIds(archive);
+		}
+		catch (RuntimeException e)
+		{
+			return new int[0];
+		}
 	}
 
 	static ModelRepository.Entry decodeItem(byte[] data)
