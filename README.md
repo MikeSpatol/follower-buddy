@@ -30,7 +30,8 @@ to the game, and it never acts for you.
   levels, writes up your best drops, and now and then goes off on an errand of
   its own.
 - **Talk-to** opens a proper dialog box: ask how today went, or answer
-  something it asked you.
+  something it asked you. Space continues and the number keys pick an option,
+  as in the game.
 
 ## Getting started
 
@@ -73,7 +74,7 @@ The full guide to the panel, the settings and the commands is in
   left-click stays theirs.
 - Speech is a data-driven rule engine (`src/main/resources/com/follower/`). A
   full pass over every rule takes about 0.1 ms.
-- 1,837 tests cover the rule engine, movement and every bundled rule; see
+- 1,844 tests cover the rule engine, movement and every bundled rule; see
   `docs/testing-strategy.md`.
 
 ## More

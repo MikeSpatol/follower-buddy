@@ -3,7 +3,7 @@ package com.follower;
 import java.awt.*;
 import java.awt.Color;
 import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.Map;
@@ -14,6 +14,7 @@ import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.input.*;
+import net.runelite.client.input.MouseAdapter;
 import net.runelite.client.ui.overlay.*;
 import net.runelite.client.ui.overlay.Overlay;
 import lombok.*;
@@ -23,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import net.runelite.api.Model;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.input.KeyListener;
 
 /**
  * A conversation with the follower, drawn over the chatbox in the game's own
@@ -337,6 +339,7 @@ class FollowerDialog extends Overlay
 	final SpriteManager spriteManager;
 	final ClientThread clientThread;
 	final AppearanceComposer composer;
+	final KeyManager keyManager;
 	final GameFontRepository gameFonts;
 
 	/**
@@ -546,30 +549,108 @@ class FollowerDialog extends Overlay
 				{
 					if (optionBounds[i] != null && optionBounds[i].contains(event.getPoint()))
 					{
-						String target = node.optionNext[i];
-						pendingOptionIndex = i;
-						pendingAction = () -> goTo(target);
+						queueOption(i);
 						break;
 					}
 				}
 			}
 			else
-			{
-				awaitingContinue = true;
-				pendingAction = FollowerDialog.this::advance;
-			}
+				queueContinue();
 
 			event.consume();
 			return event;
 		}
 	};
 
+	/**
+	 * Space continues and the number keys pick an option, as in the game's own
+	 * dialogues (issue #3). Not while something is typed in the chatbox under
+	 * the box: a message being written keeps its spaces and digits. A key that
+	 * arrives while an input is in flight is swallowed, as a click is.
+	 */
+	final KeyListener dialogKeys = new KeyListener()
+	{
+		/** Whether the key just pressed was ours, so the character it types is too. */
+		boolean swallowTyped;
+
+		@Override
+		public void keyTyped(KeyEvent e)
+		{
+			if (swallowTyped)
+			{
+				swallowTyped = false;
+				e.consume();
+			}
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e)
+		{
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e)
+		{
+			swallowTyped = false;
+			if (!open || node == null || !chatInputEmpty())
+				return;
+			if (optionsVisible())
+			{
+				int option = optionKey(e.getKeyCode());
+				if (option < 0 || option >= node.optionText.length)
+					return;
+				if (pendingAction == null)
+					queueOption(option);
+			}
+			else if (e.getKeyCode() == KeyEvent.VK_SPACE)
+			{
+				if (pendingAction == null)
+					queueContinue();
+			}
+			else
+				return;
+			swallowTyped = true;
+			e.consume();
+		}
+	};
+
+	/** The option a number key picks, 0 for the first, or -1 for any other key. */
+	static int optionKey(int keyCode)
+	{
+		if (keyCode >= KeyEvent.VK_1 && keyCode <= KeyEvent.VK_9)
+			return keyCode - KeyEvent.VK_1;
+		if (keyCode >= KeyEvent.VK_NUMPAD1 && keyCode <= KeyEvent.VK_NUMPAD9)
+			return keyCode - KeyEvent.VK_NUMPAD1;
+		return -1;
+	}
+
+	boolean chatInputEmpty()
+	{
+		String typed = client.getVarcStrValue(net.runelite.api.gameval.VarClientID.CHATINPUT);
+		return typed == null || typed.isEmpty();
+	}
+
+	/** Continues on the next tick, as a click on "Click here to continue" does. */
+	void queueContinue()
+	{
+		awaitingContinue = true;
+		pendingAction = this::advance;
+	}
+
+	/** Takes option {@code i} on the next tick, as a click on its row does. */
+	void queueOption(int i)
+	{
+		String target = node.optionNext[i];
+		pendingOptionIndex = i;
+		pendingAction = () -> goTo(target);
+	}
+
 	@Inject
 	FollowerDialog(Client client, FollowerEntity follower,
 		MouseManager mouseManager, SpriteManager spriteManager,
 		ClientThread clientThread,
 		AppearanceComposer composer,
-		net.runelite.client.input.KeyManager keyManager,
+		KeyManager keyManager,
 		GameFontRepository gameFonts)
 	{
 		this.client = client;
@@ -578,6 +659,7 @@ class FollowerDialog extends Overlay
 		this.spriteManager = spriteManager;
 		this.clientThread = clientThread;
 		this.composer = composer;
+		this.keyManager = keyManager;
 		this.gameFonts = gameFonts;
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
@@ -586,11 +668,13 @@ class FollowerDialog extends Overlay
 	void register()
 	{
 		mouseManager.registerMouseListener(clickAdapter);
+		keyManager.registerKeyListener(dialogKeys);
 	}
 
 	void unregister()
 	{
 		mouseManager.unregisterMouseListener(clickAdapter);
+		keyManager.unregisterKeyListener(dialogKeys);
 	}
 
 	/**
@@ -623,6 +707,25 @@ class FollowerDialog extends Overlay
 	void reachForTest(String nodeId)
 	{
 		latch(script.get(nodeId));
+	}
+
+	/** Shows a node's first page, as goTo does without the facing and the chathead. */
+	void showForTest(String nodeId)
+	{
+		node = script.get(nodeId);
+		pages = node.pages;
+		page = 0;
+	}
+
+	int pageForTest()
+	{
+		return page;
+	}
+
+	/** The option whose tick is in flight, or -1. */
+	int optionInFlightForTest()
+	{
+		return pendingAction == null ? -1 : pendingOptionIndex;
 	}
 
 	void close()
