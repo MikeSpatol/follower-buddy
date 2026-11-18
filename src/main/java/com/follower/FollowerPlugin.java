@@ -3197,6 +3197,31 @@ public class FollowerPlugin extends Plugin
 	private static final int STRANDED_TELEPORT_TICKS = 5;
 
 	/**
+	 * The longest walk that stays inside the Hunllef's arena. The Gauntlet's
+	 * rooms sit 16 tiles apart, so no walk across one room is longer, and a
+	 * walk that is has left the room.
+	 */
+	private static final int HUNLLEF_ARENA_STEPS = 16;
+
+	/**
+	 * True when the follower's walk to you means it is outside the Hunllef's
+	 * arena: no walk at all, or one that goes out through the maze.
+	 *
+	 * @param steps the follower's walk to you, or -1 when there is none
+	 */
+	static boolean outsideHunllefArena(int steps)
+	{
+		return steps < 0 || steps > HUNLLEF_ARENA_STEPS;
+	}
+
+	/** True during a Hunllef fight, in the normal Gauntlet or the Corrupted one. */
+	private boolean inHunllefFight()
+	{
+		return client.getVarbitValue(VarbitID.GAUNTLET_BOSS_STARTED) == 1
+			&& client.getVarbitValue(VarbitID.PLAYER_IN_GAUNTLET) == 1;
+	}
+
+	/**
 	 * The standard teleport cast and its landing, with the swirls that go with
 	 * them - the same pair the errand return uses, measured from the cache:
 	 * 714 casts at 1.58s, 715 lands at 1.56s, spotanims 111 out and 1299 back.
@@ -3255,14 +3280,22 @@ public class FollowerPlugin extends Plugin
 		}
 		// public:end agility,agility-all
 
-		if (follower.getStrandedTicks() < STRANDED_TELEPORT_TICKS)
+		// The Hunllef fight shuts the barrier behind you. Play report: a
+		// follower left outside ran round the maze, through rooms never opened,
+		// to whichever tile was nearest you through the wall. It was within
+		// snapping range, and the closest-approach pathing always found it
+		// somewhere to go, so neither the leash nor the count above ever fired.
+		Player me = client.getLocalPlayer();
+		boolean shutOut = me != null && inHunllefFight()
+			&& outsideHunllefArena(follower.stepsWalkingTo(me.getWorldLocation()));
+		if (!shutOut && follower.getStrandedTicks() < STRANDED_TELEPORT_TICKS)
 		{
 			return;
 		}
 
 		// public:cut logs
-		log.debug("Follower walled off for {} ticks; teleporting",
-			follower.getStrandedTicks());
+		log.debug("Follower walled off for {} ticks{}; teleporting",
+			follower.getStrandedTicks(), shutOut ? ", outside the Hunllef's arena" : "");
 		// public:end logs
 		follower.clearStranded();
 		follower.playAnimation(TELEPORT_CAST_ANIMATION);
