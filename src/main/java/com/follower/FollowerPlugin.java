@@ -2119,6 +2119,27 @@ public class FollowerPlugin extends Plugin
 			context.setMetOnDay(LocalDate.now().toEpochDay());
 	}
 
+	/**
+	 * True when the follower's walk to you means it is outside the Hunllef's
+	 * arena: no walk at all, or one that goes out through the maze.
+	 *
+	 * @param steps the follower's walk to you, or -1 when there is none
+	 */
+	static boolean outsideHunllefArena(int steps)
+	{
+		// HUNLLEF_ARENA_STEPS: The longest walk that stays inside the Hunllef's arena. The Gauntlet's
+		// rooms sit 16 tiles apart, so no walk across one room is longer, and a
+		// walk that is has left the room.
+		return steps < 0 || steps > 16 /* HUNLLEF_ARENA_STEPS */;
+	}
+
+	/** True during a Hunllef fight, in the normal Gauntlet or the Corrupted one. */
+	boolean inHunllefFight()
+	{
+		return client.getVarbitValue(VarbitID.GAUNTLET_BOSS_STARTED) == 1
+			&& client.getVarbitValue(VarbitID.PLAYER_IN_GAUNTLET) == 1;
+	}
+
 	static final int TELEPORT_ARRIVE_ANIMATION = 715,
 		TELEPORT_CAST_SPOTANIM = 111;
 
@@ -2166,6 +2187,14 @@ public class FollowerPlugin extends Plugin
 			return;
 		}
 
+		// The Hunllef fight shuts the barrier behind you. Play report: a
+		// follower left outside ran round the maze, through rooms never opened,
+		// to whichever tile was nearest you through the wall. It was within
+		// snapping range, and the closest-approach pathing always found it
+		// somewhere to go, so neither the leash nor the count above ever fired.
+		var me = client.getLocalPlayer();
+		boolean shutOut = me != null && inHunllefFight()
+			&& outsideHunllefArena(follower.stepsWalkingTo(me.getWorldLocation()));
 		// STRANDED_TELEPORT_TICKS: How long the follower may be walled off before it gives up and teleports.
 		// <p>The count only climbs while there is no route AT ALL - the pathfinder
 		// searches the whole loaded scene and settles for the closest reachable
@@ -2173,7 +2202,7 @@ public class FollowerPlugin extends Plugin
 		// than a long way round. Five ticks is three seconds: long enough that
 		// walking briefly out of sight is not a teleport, short enough that the
 		// follower does not stand at a wall looking foolish.
-		if (follower.getStrandedTicks() < 5 /* STRANDED_TELEPORT_TICKS */)
+		if (!shutOut && follower.getStrandedTicks() < 5 /* STRANDED_TELEPORT_TICKS */)
 			return;
 
 		follower.clearStranded();

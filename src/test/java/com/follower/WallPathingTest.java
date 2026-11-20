@@ -803,4 +803,61 @@ public class WallPathingTest
 		assertTrue(follower.goodGround(open));
 		assertTrue(follower.canStep(open, 1, 0));
 	}
+
+	/**
+	 * A box of solid tiles from (16,16) to (24,24) with the player's tile
+	 * (20,20) inside it - the shape of the Hunllef's arena once its barrier
+	 * has shut. The follower stands outside at (14,20). With {@code gap}, the
+	 * far wall has one open tile at (20,24).
+	 */
+	private static FakeGame sealedRoom(boolean gap)
+	{
+		FakeGame game = new FakeGame().withCollision();
+		for (int i = 16; i <= 24; i++)
+		{
+			game.blockTile(i, 16);
+			if (!gap || i != 20)
+			{
+				game.blockTile(i, 24);
+			}
+			game.blockTile(16, i);
+			game.blockTile(24, i);
+		}
+		return game;
+	}
+
+	@Test
+	public void aWalkThatCannotArriveIsNoWalk()
+	{
+		// The closest-approach fallback would park the follower against the
+		// wall nearest you. That is somewhere to go, but it is not a walk to
+		// you, and counting it as one is how a follower shut out of the
+		// Hunllef's arena kept roaming the maze instead of teleporting in.
+		FollowerEntity follower = followerOn(sealedRoom(false));
+		assertEquals(-1, follower.stepsBetween(
+			new WorldPoint(14, 20, 0), new WorldPoint(20, 20, 0)));
+	}
+
+	@Test
+	public void theLongWayRoundCountsEveryStep()
+	{
+		// A gap on the far side: six tiles apart through the wall, a good deal
+		// more on foot. The count is the walk, not the distance.
+		FakeGame game = sealedRoom(true);
+		WorldPoint outside = new WorldPoint(14, 20, 0);
+		WorldPoint inside = new WorldPoint(20, 20, 0);
+		int steps = followerOn(game).stepsBetween(outside, inside);
+		assertTrue("round through the gap, got " + steps,
+			steps > outside.distanceTo(inside));
+	}
+
+	@Test
+	public void openFloorIsAStraightWalk()
+	{
+		FollowerEntity follower = followerOn(new FakeGame().withCollision());
+		assertEquals(3, follower.stepsBetween(
+			new WorldPoint(10, 10, 0), new WorldPoint(13, 12, 0)));
+		assertEquals("another floor is never a walk", -1, follower.stepsBetween(
+			new WorldPoint(10, 10, 0), new WorldPoint(13, 12, 1)));
+	}
 }

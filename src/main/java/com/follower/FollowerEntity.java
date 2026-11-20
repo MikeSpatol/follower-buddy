@@ -3323,6 +3323,25 @@ class FollowerEntity implements CrossingWatch.Listener
 	}
 
 	/**
+	 * How many steps the walk from {@code from} to {@code to} takes, counting
+	 * only a walk that arrives: the closest-approach fallback that parks you
+	 * against a fence does not count. -1 when there is no such walk.
+	 */
+	int stepsBetween(WorldPoint from, WorldPoint to)
+	{
+		if (from == null || to == null || from.getPlane() != to.getPlane())
+			return -1;
+		var path = findPath(from, to, false, null);
+		return path == null ? -1 : path.size();
+	}
+
+	/** {@link #stepsBetween} from the tile the follower is on, server-side. */
+	int stepsWalkingTo(WorldPoint to)
+	{
+		return stepsBetween(simTile != null ? simTile : tile, to);
+	}
+
+	/**
 	 * True while the follower has somewhere of its own to be - a Send, or the
 	 * walk-around behind Face-me. Being away from the player is the point of
 	 * both, so neither counts as stuck.
